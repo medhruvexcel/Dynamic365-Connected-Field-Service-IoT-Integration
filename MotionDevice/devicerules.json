@@ -1,0 +1,11 @@
+[
+  {
+    "DeviceType": "MotionSensor",
+    "RPM": 4200,
+    "RPMRuleOutput": "HighRPMAlert",
+    "Vibration": 8 ,
+    "VibrationRuleOutput":"AbnormalVibrationAlert",
+    "Temperature": 75,
+    "TemperatureRuleOutput": "HighTemperatureAlert"
+  }
+]
