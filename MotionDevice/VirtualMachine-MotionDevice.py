@@ -20,9 +20,7 @@ def send_telemetry(record_count):
         "DeviceID": str(device_id),  # Device ID
         "RPM": int(random.uniform(2000, 5500)),  # Random RPM between 1000 and 5000
         "Vibration": int(random.uniform(1, 10)),  # Random vibration level between 0.1 and 5.0
-        "MotionDetected": random.choice([True, False]),  # Random motion detection (True/False)
-        "DeviceStatus": random.choice(["Normal", "Warning", "Critical"]),# Device status (Normal, Warning, Critical)
-        "Temperature" : int( random.uniform(80 ,150))
+        "Temperature" : int( random.uniform(50 ,110))
     }
 
     # Create a message from the telemetry data, ensuring it's properly serialized to JSON
