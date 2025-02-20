@@ -1,0 +1,65 @@
+WITH AlertData AS (
+    SELECT
+        Stream.DeviceID, 
+        'RPM' AS ReadingType, 
+        Stream.RPM AS Reading,         -- collecting data from IoT stream
+        Stream.EventToken AS EventToken, 
+        Ref.RPM AS Threshold,          -- device rule setted threshold value 
+        Ref.RPMRuleOutput AS RuleOutput,
+        Stream.EventEnqueuedUtcTime AS [Time],        -- Timestamp
+        Stream.MessageID           -- customized code to get each message ID 
+    FROM IoTStream Stream
+    JOIN DeviceRulesBlob Ref ON Ref.DeviceType = 'MotionSensor'
+    WHERE
+        Ref.RPM IS NOT NULL AND Stream.RPM > Ref.RPM         -- defining condition between IoT data and device rule data ( setting threshold ) 
+
+    UNION ALL      -- the union all is used to join futher multiple telemetry 
+
+    SELECT
+        Stream.DeviceID,
+        'Vibration' AS ReadingType,
+        Stream.Vibration AS Reading,
+        Stream.EventToken AS EventToken,
+        Ref.Vibration AS Threshold,
+        Ref.VibrationRuleOutput AS RuleOutput,
+        Stream.EventEnqueuedUtcTime AS [Time],
+        Stream.MessageID
+    FROM IoTStream Stream
+    JOIN DeviceRulesBlob Ref ON Ref.DeviceType = 'MotionSensor'
+    WHERE
+        Ref.Vibration IS NOT NULL AND Stream.Vibration > Ref.Vibration
+
+    UNION ALL
+
+    SELECT
+        Stream.DeviceID,
+        'Temperature' AS ReadingType,
+        Stream.Temperature AS Reading,
+        Stream.EventToken AS EventToken,
+        Ref.Temperature AS Threshold,
+        Ref.TemperatureRuleOutput AS RuleOutput,
+        Stream.EventEnqueuedUtcTime AS [Time],
+        Stream.MessageID
+    FROM IoTStream Stream
+    JOIN DeviceRulesBlob Ref ON Ref.DeviceType = 'MotionSensor'
+    WHERE
+        Ref.Temperature IS NOT NULL AND Stream.Temperature > Ref.Temperature
+)
+SELECT      -- it displays the result in stream analytics job
+        data.MessageID,    --displaying first column as message ID 
+        data.DeviceId,
+        data.ReadingType,
+        data.Reading,
+        data.EventToken,
+        data.Threshold,
+        data.RuleOutput,
+        data.Time
+INTO AlertsQueue    -- it appends the alerts ( if any ) in the AlertQueue and you will be getting the alerts reflected in Connected Field Service
+FROM AlertData data
+WHERE LAG(data.DeviceID) OVER (PARTITION BY data.DeviceId, data.Reading, data.ReadingType LIMIT DURATION(minute, 1)) IS NULL
+
+
+
+
+
+-- note : if you want to apply Order By clause , it will not work with Lag function , recommendation follow the above script approach for effective results .
